@@ -77,6 +77,7 @@ int main(int argc, char *argv[])
 		for (size_t i=0; i<count; i++) {
 			s.send_to(boost::asio::buffer(request, request_length), endpoint);
 		}
+		if (!interactive) break;
 	}
 /*
 	char reply[max_length];

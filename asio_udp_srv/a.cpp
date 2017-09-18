@@ -618,11 +618,13 @@ void asiotest_udpserv(std::vector<std::string> options) {
 							auto & weld = welds.at(found_ix);
 							weld.m_reserved=true; // we are using it now
 						}
-						else {
-							_erro("No free tuntap buffers!");
-							break ; // <---
-						}
 					} // lock operations on welds
+
+					if (!found_any) { // NOT in lock
+						_erro("No free tuntap buffers!");
+						std::this_thread::sleep_for(std::chrono::milliseconds(50));
+						continue ; // <---
+					}
 
 					auto & found_weld = welds.at(found_ix);
 					size_t receive_size = found_weld.space_left();
