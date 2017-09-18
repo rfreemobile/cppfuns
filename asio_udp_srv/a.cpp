@@ -99,6 +99,10 @@ std::atomic<int> g_running_tuntap_jobs;
 std::atomic<long int> g_recv_totall_count;
 std::atomic<long int> g_recv_totall_size;
 
+std::atomic<int> g_count_h1;
+std::atomic<int> g_count_h2;
+std::atomic<int> g_count_h3;
+
 struct t_mytime {
 	using t_timevalue = std::chrono::time_point<std::chrono::steady_clock>;
 	t_timevalue m_time;
@@ -316,6 +320,10 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	g_recv_totall_size=0;
 	g_recv_started = t_mytime{};
 
+	g_count_h1=0;
+	g_count_h2=0;
+	g_count_h3=0;
+
 	auto func_show_usage = []() {
 		std::cout << "\nUsage: program    inbuf   socket socket_spread   ios thread_per_ios  crypto_task  [OPTIONS]\n"
 		<< "OPTIONS can be any of words: \n"
@@ -509,6 +517,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 				std::ostringstream oss;
 				oss << "Loop, i="<<i<<" recv count=" << g_recv_totall_count << ", size=" << now_recv_totall_size
 					<< " speed="<< (now_recv_speed/1000000) <<" MB/s";
+				oss << "Handlers: " << g_count_h1 << " " << g_count_h2 << " " << g_count_h3 << " ";
 				oss << " Welds: ";
 				{
 					std::lock_guard<std::mutex> lg(welds_mutex);
@@ -726,6 +735,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 													_dbg1("TUNTAP: data passed on and sent to peer. wire_socket_nr="<<wire_socket_nr
 														<<" ec="<<ec.message()
 													);
+													++g_count_h3;
 													{
 														_dbg1("TUNTAP - DONE SENDING (weld "<<found_ix<<") ... taking lock");
 														std::lock_guard<std::mutex> lg(welds_mutex);
@@ -736,6 +746,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 												}
 											);
 											_note("(wrapped) - starting TUNTAP->WIRE transfer, wire "<<wire_socket_nr<<" weld " <<found_ix << " - ASYNC STARTED");
+											++g_count_h2;
 
 
 										} // delayed TUNTAP->WIRE
@@ -743,6 +754,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 								); // start(post) handler: TUNTAP->WIRE start
 
 								_note("TUNTAP->Wire work is started(post) by weld " << found_ix << " to P2P socket="<<wire_socket_nr);
+								++g_count_h1;
 
 							} // send the full weld
 							else { // do not send. weld extended with data
